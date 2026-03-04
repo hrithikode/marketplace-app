@@ -5,7 +5,7 @@ export class AuthController {
     static async register(req: Request, res: Response) {
         try{
             const { name, email, password, role } = req.body;
-
+            console.log("a");
             const user = await AuthService.register(name, email, password, role);
 
             res.status(201).json({
@@ -28,6 +28,23 @@ export class AuthController {
             res.status(401).json({
                 error: error.message
             });
+        }
+    }
+
+    static async verifyOtp(req: Request, res: Response) {
+        try {
+            const { email, otp } = req.body;
+
+            const user = await AuthService.verifyOtp(email, otp);
+
+            const { password: _, ...safeUser } = user;
+
+            res.status(201).json({
+                message: "User verified successfully",
+                user: safeUser,
+            });
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
         }
     }
 }
