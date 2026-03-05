@@ -11,4 +11,8 @@ router.post(
   ShopController.createShop
 );
 
+
+
+router.get("/nearby", authenticate, ShopController.getNearbyShops);
+
 export default router;

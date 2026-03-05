@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { prisma } from "../config/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
+import  { calculateDistance }  from "../utils/distance";
 
 export class ShopController {
 
@@ -35,5 +36,39 @@ export class ShopController {
       res.status(400).json({ error: error.message });
     }
   }
+
+
+
+  static async getNearbyShops(req: AuthRequest, res: Response) {
+
+  try {
+
+    const { lat, lng } = req.query;
+
+    const shops = await prisma.shop.findMany({
+      include: {
+        products: true
+      }
+    });
+
+    const nearbyShops = shops.filter((shop) => {
+
+      const distance = calculateDistance(
+        Number(lat),
+        Number(lng),
+        shop.latitude,
+        shop.longitude
+      );
+
+      return distance <= 5;
+    });
+
+    res.json(nearbyShops);
+
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+
+}
 
 }
