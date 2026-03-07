@@ -1,0 +1,105 @@
+import { Response } from "express";
+import { prisma } from "../config/prisma";
+import { AuthRequest } from "../middleware/auth.middleware";
+
+export class CartController {
+
+  static async addToCart(req: AuthRequest, res: Response) {
+    try {
+
+      const { productId, quantity } = req.body;
+      const buyerId = req.user!.userId;
+
+      let cart = await prisma.cart.findUnique({
+        where: { buyerId }
+      });
+
+      if (!cart) {
+        cart = await prisma.cart.create({
+          data: { buyerId }
+        });
+      }
+
+      const product = await prisma.product.findUnique({
+        where: { id: productId }
+      });
+
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      const existingItem = await prisma.cartItem.findFirst({
+        where: {
+          cartId: cart.id,
+          productId
+        }
+      });
+
+      if (existingItem) {
+
+        const updated = await prisma.cartItem.update({
+          where: { id: existingItem.id },
+          data: {
+            quantity: existingItem.quantity + quantity
+          }
+        });
+
+        return res.json(updated);
+      }
+
+      const item = await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          productId,
+          quantity,
+          price: product.price
+        }
+      });
+
+      res.status(201).json(item);
+
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async getCart(req: AuthRequest, res: Response) {
+    try {
+
+      const buyerId = req.user!.userId;
+
+      const cart = await prisma.cart.findUnique({
+        where: { buyerId },
+        include: {
+          items: {
+            include: {
+              product: true
+            }
+          }
+        }
+      });
+
+      res.json(cart);
+
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async removeItem(req: AuthRequest, res: Response) {
+    try {
+
+      const id = req.params.id as string;;
+
+      await prisma.cartItem.delete({
+        where: { id }
+      });
+
+      res.json({ message: "Item removed" });
+
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+}
