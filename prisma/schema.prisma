@@ -37,7 +37,19 @@ model User {
   password  String
   role      Role     @default(BUYER)
   shop      Shop?
-  orders    Order[]  @relation("BuyerOrders")
+  orders    Order[]
+  cart      Cart?
+  createdAt DateTime @default(now())
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  email     String
+  name      String
+  password  String
+  role      Role
+  otp       String
+  expiresAt DateTime
   createdAt DateTime @default(now())
 }
 
@@ -50,40 +62,61 @@ model Shop {
   owner     User      @relation(fields: [ownerId], references: [id])
   ownerId   String    @unique
   products  Product[]
+  orders    Order[]
   createdAt DateTime  @default(now())
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   title       String
   description String
   price       Float
-  imageUrl    String
-  shop        Shop     @relation(fields: [shopId], references: [id])
+  imageUrl    String?
+  shop        Shop        @relation(fields: [shopId], references: [id])
   shopId      String
-  orders      Order[]
-  createdAt   DateTime @default(now())
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  buyerId   String     @unique
+  buyer     User       @relation(fields: [buyerId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+}
+
+model CartItem {
+  id        String  @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
 }
 
 model Order {
   id            String        @id @default(uuid())
-  buyer         User          @relation("BuyerOrders", fields: [buyerId], references: [id])
   buyerId       String
-  product       Product       @relation(fields: [productId], references: [id])
-  productId     String
+  buyer         User          @relation(fields: [buyerId], references: [id])
+  shopId        String
+  shop          Shop          @relation(fields: [shopId], references: [id])
   status        OrderStatus   @default(PENDING)
   paymentMethod PaymentMethod
-  paymentId     String?
+  items         OrderItem[]
   createdAt     DateTime      @default(now())
 }
 
-model OtpVerification {
-  id        String   @id @default(uuid())
-  email     String
-  name      String
-  password  String
-  role      Role
-  otp       String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
