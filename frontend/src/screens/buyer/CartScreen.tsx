@@ -1,11 +1,31 @@
 import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
 import { useEffect, useState } from "react";
 import { getCart, removeCartItem } from "../../api/cart.api";
+import { api } from "../../api/axios";
+import { useNavigation } from "@react-navigation/native";
 
 export default function CartScreen() {
 
+  const navigation = useNavigation<any>();
+
   const [cart, setCart] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
+
+  const handleCheckout = async () => {
+    try {
+
+      await api.post("/orders/checkout", {
+        paymentMethod: "COD"
+      });
+
+      console.log("Order placed");
+
+      navigation.navigate("Orders");
+
+    } catch (error) {
+        console.log(error);
+      }
+  };
 
   const fetchCart = async () => {
     try {
@@ -50,6 +70,12 @@ export default function CartScreen() {
 
       <Text style={styles.title}>Cart</Text>
 
+
+      {cart.length === 0 && (
+        <Text>Your cart is empty</Text>
+      )}
+
+
       <FlatList
         data={cart}
         keyExtractor={(item) => item.id}
@@ -83,7 +109,14 @@ export default function CartScreen() {
           Total: ₹ {total}
         </Text>
 
-        <Pressable style={styles.checkout}>
+        <Pressable
+          style={[
+            styles.checkout,
+            cart.length === 0 && { backgroundColor: "gray" }
+          ]}
+          onPress={handleCheckout}
+          disabled={cart.length === 0}
+        >
           <Text style={styles.checkoutText}>
             Checkout
           </Text>

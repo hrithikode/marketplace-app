@@ -26,4 +26,18 @@ export class OrderController {
 
   }
 
+  static async getOrders(req: AuthRequest, res: Response) {
+    try {
+
+      const buyerId = req.user!.userId;
+
+      const orders = await OrderService.getOrders(buyerId);
+
+      res.json(orders);
+
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
 }

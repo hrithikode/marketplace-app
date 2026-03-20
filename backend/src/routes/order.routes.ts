@@ -5,5 +5,6 @@ import { authenticate } from "../middleware/auth.middleware";
 const router = Router();
 
 router.post("/checkout", authenticate, OrderController.checkout);
+router.get("/", authenticate, OrderController.getOrders);
 
 export default router;
