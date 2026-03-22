@@ -13,6 +13,6 @@ router.post(
 
 
 
-router.get("/nearby", authenticate, ShopController.getNearbyShops);
+router.get("/nearby", authenticate, ShopController.getNearby);
 
 export default router;
